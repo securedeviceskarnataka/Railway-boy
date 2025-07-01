@@ -1,76 +1,67 @@
-const mineflayer = require('mineflayer')
-function createBot () {
+const mineflayer = require('mineflayer');
+
+function createBot() {
 const bot = mineflayer.createBot({
-  host: 'sudana_smp.aternos.me', //ACA VA LA IP DE TU SERVIDOR  // SERVER IP
-  username: 'SUDANA_24X7_1', // ACA VA EL NOMBRE DEL BOT  // BOT NAME
-  port: 53659, // PUERTO DEL SERVIDOR // SERVER PORT
-  version: '1.16.5',
-})
+host: 'sudana_smp.aternos.me', // SERVER IP
+username: 'SUDANA_24X7',     // BOT NAME
+port: 53659,                   // SERVER PORT
+version: '1.16.5',
+});
 
 bot.on('spawn', () => {
-  bot.chat('/register aagop04')  
+bot.chat('/register aagop04');
 });
 
-//NO TOCAR/// DO NOT TOUCH
+bot.on("move", function () {
+bot.setControlState("jump", true);
+setTimeout(() => {
+bot.setControlState("jump", false);
+}, 1000);
 
-bot.on("move", function() {
-  //triggers when the bot moves
-  //DONT MODIFY THE CODE, THIS CODE WAS CREATED BY AAG OP (YOUTUBE AAG OP). READ THE LICENSE.
+setTimeout(() => {  
+  bot.setControlState("forward", true);  
+  setTimeout(() => {  
+    bot.setControlState("forward", false);  
+  }, 500);  
+}, 1000);  
 
-  bot.setControlState("jump", true); //continuously jumps
-  setTimeout(() => {
-    //sets a delay
-    bot.setControlState("jump", false); //stops jumping
-  }, 1000); //delay time
-  //DONT MODIFY THE CODE, THIS CODE WAS CREATED BY AAG OP (YOUTUBE AAG OP). READ THE LICENSE.
+setTimeout(() => {  
+  bot.setControlState("back", true);  
+  setTimeout(() => {  
+    bot.setControlState("back", false);  
+  }, 500);  
+}, 2000);  
 
-  setTimeout(() => {
-    //sets a delay
-  //DONT MODIFY THE CODE, THIS CODE WAS CREATED BY AAG OP (YOUTUBE AAG OP). READ THE LICENSE.
-    bot.setControlState("forward", true); //continuously walks forward
-    setTimeout(() => {
-      //sets a delay
-      bot.setControlState("forward", false); //stops walking forward
-    }, 500); //delay time
-  }, 1000); //delay time
-  //DONT MODIFY THE CODE, THIS CODE WAS CREATED BY AAG OP (YOUTUBE AAG OP). READ THE LICENSE.
+setTimeout(() => {  
+  bot.setControlState("right", true);  
+  setTimeout(() => {  
+    bot.setControlState("right", false);  
+  }, 2000);  
+}, 500);  
 
-  setTimeout(() => {
-    //sets a delay
-    bot.setControlState("back", true); //continuously walks backwards
-    setTimeout(() => {
-      //sets a delay
-      bot.setControlState("back", false); //stops walking backwards
-    }, 500); //delay time
-  }, 2000); //delay time
+setTimeout(() => {  
+  bot.setControlState("left", true);  
+  setTimeout(() => {  
+    bot.setControlState("left", false);  
+  }, 2000);  
+}, 500);
 
-  setTimeout(() => {
-    //sets a delay
-  //DONT MODIFY THE CODE, THIS CODE WAS CREATED BY AAG OP (YOUTUBE AAG OP). READ THE LICENSE.
-    bot.setControlState("right", true); //continuously walks right
-    setTimeout(() => {
-      //sets a delay
-      bot.setControlState("right", false); //stops walking right
-    }, 2000); //delay time
-  }, 500); //delay time
-
-  setTimeout(() => {
-    //sets a delay
-    bot.setControlState("left", true); //continuously walks lefz
-    setTimeout(() => {
-      //sets a delay
-      bot.setControlState("left", false); //stops walking left
-    }, 2000); //delay time
-  }, 500); //delay time
 });
-  //DONT MODIFY THE CODE, THIS CODE WAS CREATED BY AAG OP (YOUTUBE AAG OP). READ THE LICENSE.
 
-bot.on('kicked', console.log)
-bot.on('error', console.log)
-bot.on('end', createBot)
+bot.on('kicked', console.log);
+bot.on('error', console.log);
+bot.on('end', createBot);
+
+// Auto-disconnect and reconnect every 3 hours
+setInterval(() => {
+console.log("Reconnecting bot to avoid Aternos ban...");
+bot.quit();
+
+setTimeout(() => {  
+  createBot();  
+}, 50000 ); // 50sec wait before reconnect
+
+}, 3 * 60 * 60 * 1000); // 3 hours
 }
 
-createBot()
-
-
-  //DONT MODIFY THE CODE, THIS CODE WAS CREATED BY AAG OP (YOUTUBE AAG OP). READ THE LICENSE.
+createBot();
