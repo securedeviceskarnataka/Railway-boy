@@ -2,7 +2,7 @@ const mineflayer = require('mineflayer')
 function createBot () {
 const bot = mineflayer.createBot({
   host: 'sudana_smp.aternos.me', //ACA VA LA IP DE TU SERVIDOR  // SERVER IP
-  username: 'SUDANA_24X7', // ACA VA EL NOMBRE DEL BOT  // BOT NAME
+  username: 'SUDANA_24X7_1', // ACA VA EL NOMBRE DEL BOT  // BOT NAME
   port: 53659, // PUERTO DEL SERVIDOR // SERVER PORT
   version: '1.16.5',
 })
