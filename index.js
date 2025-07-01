@@ -59,7 +59,7 @@ bot.quit();
 
 setTimeout(() => {  
   createBot();  
-}, 50000 ); // 50sec wait before reconnect
+}, 60000 ); // 1min  wait before reconnect
 
 }, 3 * 60 * 60 * 1000); // 3 hours
 }
