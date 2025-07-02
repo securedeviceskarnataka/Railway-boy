@@ -40,8 +40,8 @@ function createBot() {
   bot.on('kicked', console.log);
   bot.on('error', console.log);
   bot.on('end', () => {
-    console.log("Bot disconnected. Reconnecting in 1 minute 50 seconds...");
-    setTimeout(createBot, 110000); // 1 min 50 sec = 110000 ms
+    console.log("Bot disconnected. Reconnecting in 50sec ");
+    setTimeout(createBot, 50000); // 50sec
   });
 
   // Force restart every 1 hour
