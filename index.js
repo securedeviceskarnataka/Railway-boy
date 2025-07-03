@@ -12,7 +12,7 @@ function createBot() {
   const bot = mineflayer.createBot({
     host: 'sudana_smp.aternos.me',
     port: 53659,
-    username: 'SUDANA_SMP',
+    username: 'SUDANA_24X7',
     version: '1.16.5',
   });
 
@@ -72,12 +72,14 @@ function createBot() {
 
   bot.on('spawn', () => {
     bot.chat('/register aagop04'); // Change to /login if already registered
-    setTimeout(() => bot.chat('/login aagop04'), 1000); // Just in case
-    startHumanLikeBehavior();
+    setTimeout(() => bot.chat('/login aagop04'), 1000);
+
+    setTimeout(startHumanLikeBehavior, 3000); // Delay movement to let chat finish
     scheduleRandomMessage();
     scheduleRandomDisconnect();
   });
 
+  // ✅ INSTANT welcome messages
   bot.on('playerJoined', (player) => {
     if (player.username === bot.username) return;
 
@@ -102,16 +104,16 @@ function createBot() {
   }
 
   function scheduleRandomMessage() {
-    const delay = Math.floor(Math.random() * (6 - 3 + 1) + 3) * 60 * 1000;
+    const delay = Math.floor(Math.random() * (6 - 3 + 1) + 3) * 60 * 1000; // 3 to 6 min
     setTimeout(() => {
       const msg = funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
       bot.chat(msg);
-      scheduleRandomMessage(); // Recursive rescheduling
+      scheduleRandomMessage(); // Repeat
     }, delay);
   }
 
   function scheduleRandomDisconnect() {
-    const minutes = Math.floor(Math.random() * (120 - 60 + 1)) + 60;
+    const minutes = Math.floor(Math.random() * (120 - 60 + 1)) + 60; // 60–120 min
     console.log(`Next disconnect scheduled in ${minutes} minutes.`);
     setTimeout(() => {
       console.log("Random disconnecting...");
