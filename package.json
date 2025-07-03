@@ -1,14 +1,15 @@
 {
   "name": "minecraft-bot",
   "version": "1.0.0",
-  "description": "Script para controlar un bot de Minecraft",
+  "description": "24/7 Minecraft bot for Aternos using Mineflayer",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "author": "Jin",
-  "license": "GNU",
+  "license": "MIT",
   "dependencies": {
+    "express": "^4.18.2",
     "mineflayer": "^4.12.0"
   }
 }
