@@ -2,7 +2,6 @@ const mineflayer = require('mineflayer');
 const Vec3 = require('vec3');
 const express = require('express');
 
-// Keep Railway or any host alive
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.get("/", (req, res) => res.send("Bot is running"));
@@ -12,16 +11,16 @@ function createBot() {
   const bot = mineflayer.createBot({
     host: 'sudana_smp.aternos.me',
     port: 53659,
-    username: 'SUDANA_boi',
+    username: 'SUDANA_boii',
     version: '1.16.5',
   });
 
   const operatorUsernames = ['.A1111318', 'A1111318'];
   const respectedMessages = [
     "Bow down mortals, the Operator has arrived!",
-    "A salute to our lord and savior A1111318!",
+    "A salute to our lord and savior Akshath!",
     "The server just leveled up. Welcome, Operator!",
-    "A wild OP A1111318 appeared with god-tier vibes!"
+    "A wild King Akshath appeared with god-tier vibes!"
   ];
 
   const generalWelcomeMessages = [
@@ -70,26 +69,37 @@ function createBot() {
     "Powered by memes and potatoes."
   ];
 
+  let knownPlayers = new Set();
+
   bot.on('spawn', () => {
-    bot.chat('/register aagop04'); // Change to /login if already registered
+    bot.chat('/register aagop04'); // Use /login if already registered
     setTimeout(() => bot.chat('/login aagop04'), 1000);
 
-    setTimeout(startHumanLikeBehavior, 3000); // Delay movement to let chat finish
+    setTimeout(startHumanLikeBehavior, 3000);
     scheduleRandomMessage();
     scheduleRandomDisconnect();
+    monitorJoins();
   });
 
-  // ✅ INSTANT welcome messages
-  bot.on('playerJoined', (player) => {
-    if (player.username === bot.username) return;
+  // ✅ Fix: Custom join detection using player list
+  function monitorJoins() {
+    setInterval(() => {
+      const currentPlayers = Object.keys(bot.players);
 
-    const isOperator = operatorUsernames.includes(player.username);
-    const msg = isOperator
-      ? respectedMessages[Math.floor(Math.random() * respectedMessages.length)]
-      : generalWelcomeMessages[Math.floor(Math.random() * generalWelcomeMessages.length)];
+      currentPlayers.forEach(username => {
+        if (!knownPlayers.has(username) && username !== bot.username) {
+          knownPlayers.add(username);
 
-    bot.chat(msg);
-  });
+          const isOperator = operatorUsernames.includes(username);
+          const msg = isOperator
+            ? respectedMessages[Math.floor(Math.random() * respectedMessages.length)]
+            : generalWelcomeMessages[Math.floor(Math.random() * generalWelcomeMessages.length)];
+
+          bot.chat(msg);
+        }
+      });
+    }, 5000); // Check every 5 seconds
+  }
 
   function startHumanLikeBehavior() {
     setInterval(() => {
@@ -97,23 +107,21 @@ function createBot() {
       const action = actions[Math.floor(Math.random() * actions.length)];
       bot.setControlState(action, true);
       setTimeout(() => bot.setControlState(action, false), 500 + Math.random() * 1500);
-
-      // Random look around
       bot.look(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2);
     }, 7000);
   }
 
   function scheduleRandomMessage() {
-    const delay = Math.floor(Math.random() * (6 - 3 + 1) + 3) * 60 * 1000; // 3 to 6 min
+    const delay = Math.floor(Math.random() * (6 - 3 + 1) + 3) * 60 * 1000;
     setTimeout(() => {
       const msg = funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
       bot.chat(msg);
-      scheduleRandomMessage(); // Repeat
+      scheduleRandomMessage();
     }, delay);
   }
 
   function scheduleRandomDisconnect() {
-    const minutes = Math.floor(Math.random() * (120 - 60 + 1)) + 60; // 60–120 min
+    const minutes = Math.floor(Math.random() * (120 - 60 + 1)) + 60;
     console.log(`Next disconnect scheduled in ${minutes} minutes.`);
     setTimeout(() => {
       console.log("Random disconnecting...");
