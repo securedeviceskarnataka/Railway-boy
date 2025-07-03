@@ -1,5 +1,4 @@
 const mineflayer = require('mineflayer');
-const Vec3 = require('vec3');
 const express = require('express');
 
 const app = express();
@@ -69,37 +68,35 @@ function createBot() {
     "Powered by memes and potatoes."
   ];
 
-  let knownPlayers = new Set();
+  const knownPlayers = new Set();
 
   bot.on('spawn', () => {
-    bot.chat('/register aagop04'); // Use /login if already registered
+    bot.chat('/register aagop04');
     setTimeout(() => bot.chat('/login aagop04'), 1000);
 
-    setTimeout(startHumanLikeBehavior, 3000);
+    startHumanLikeBehavior();
     scheduleRandomMessage();
     scheduleRandomDisconnect();
-    monitorJoins(); // ⬅️ This is now the FIXED function
   });
 
-  // ✅ FIXED: Properly detects when a player joins
-  function monitorJoins() {
-    bot.on('playerJoined', (player) => {
-      const username = player.username;
+  // ✅ CHAT-BASED JOIN DETECTION (WORKS IN ALL SERVERS)
+  bot.on('message', (jsonMsg) => {
+    const message = jsonMsg.toString();
+    const joinMatch = message.match(/^(.+?) joined the game$/);
 
-      if (username === bot.username) return;
+    if (joinMatch) {
+      const username = joinMatch[1];
+      if (username === bot.username || knownPlayers.has(username)) return;
 
-      if (!knownPlayers.has(username)) {
-        knownPlayers.add(username);
+      knownPlayers.add(username);
+      const isOperator = operatorUsernames.includes(username);
+      const msg = isOperator
+        ? respectedMessages[Math.floor(Math.random() * respectedMessages.length)]
+        : generalWelcomeMessages[Math.floor(Math.random() * generalWelcomeMessages.length)];
 
-        const isOperator = operatorUsernames.includes(username);
-        const msg = isOperator
-          ? respectedMessages[Math.floor(Math.random() * respectedMessages.length)]
-          : generalWelcomeMessages[Math.floor(Math.random() * generalWelcomeMessages.length)];
-
-        bot.chat(msg);
-      }
-    });
-  }
+      bot.chat(msg);
+    }
+  });
 
   function startHumanLikeBehavior() {
     setInterval(() => {
