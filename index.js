@@ -18,14 +18,15 @@ function createBot() {
   const respectedMessages = [
     "Bow down mortals, the Operator has arrived!",
     "A salute to our lord and savior Akshath!",
-    "The server just leveled up. Welcome, Operator!",
-    "A wild King Akshath appeared with god-tier vibes!"
+    "The server just leveled up. Welcome, Operator Akshath!",
+    "A wild King Akshath appeared with god-tier vibes!",
+    "shhh maintain silence ! Akshath is here !!"
   ];
 
   const generalWelcomeMessages = [
     "Ey yo! Another noob joins the chaos!",
-    "Hide your diamonds, someone's here!",
-    "Did someone order a creeper magnet?",
+    "Hide your diamonds, someone's here! joining the server.",
+    "Did someone order a creeper magnet?welcome",
     "Server's now 1% cooler. Welcome!",
     "Hope you brought snacks, it's wild here!",
     "And they said legends never join. Welp!",
@@ -57,16 +58,18 @@ function createBot() {
     "I once won a fight... in creative mode.",
     "Is water wet or just lazy ice?",
     "Bees are just angry flying potatoes.",
-    "Who needs diamonds when you have friendship? lol jk gimme diamonds.",
-    "Oops, I crafted 64 buttons again.",
+    "Who needs diamonds when you have friendship? lol gimme diamonds.",
+    "Oops, I crafted 64 torches again.",
     "I’d help, but I’m morally AFK.",
     "Let’s all pretend we know what we’re doing.",
     "Breaking news: Bot found to be cooler than players.",
     "Currently running on 3 brain cells and redstone.",
     "Built a dirt house, feeling rich.",
     "Don’t worry, I only grief emotionally.",
-    "Powered by memes and potatoes."
-  ];
+    "Powered by memes and potatoes.",
+    "i saw herobrine ahh its real !!"
+  
+ ];
 
   bot.on('spawn', () => {
     bot.chat('/register aagop04');
@@ -127,7 +130,7 @@ function createBot() {
   bot.on('error', console.log);
   bot.on('end', () => {
     console.log("Bot disconnected. Reconnecting in 50 seconds...");
-    setTimeout(createBot, 50000);
+    setTimeout(createBot, 30000);
   });
 }
 
