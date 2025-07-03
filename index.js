@@ -78,27 +78,27 @@ function createBot() {
     setTimeout(startHumanLikeBehavior, 3000);
     scheduleRandomMessage();
     scheduleRandomDisconnect();
-    monitorJoins();
+    monitorJoins(); // ⬅️ This is now the FIXED function
   });
 
-  // ✅ Fix: Custom join detection using player list
+  // ✅ FIXED: Properly detects when a player joins
   function monitorJoins() {
-    setInterval(() => {
-      const currentPlayers = Object.keys(bot.players);
+    bot.on('playerJoined', (player) => {
+      const username = player.username;
 
-      currentPlayers.forEach(username => {
-        if (!knownPlayers.has(username) && username !== bot.username) {
-          knownPlayers.add(username);
+      if (username === bot.username) return;
 
-          const isOperator = operatorUsernames.includes(username);
-          const msg = isOperator
-            ? respectedMessages[Math.floor(Math.random() * respectedMessages.length)]
-            : generalWelcomeMessages[Math.floor(Math.random() * generalWelcomeMessages.length)];
+      if (!knownPlayers.has(username)) {
+        knownPlayers.add(username);
 
-          bot.chat(msg);
-        }
-      });
-    }, 5000); // Check every 5 seconds
+        const isOperator = operatorUsernames.includes(username);
+        const msg = isOperator
+          ? respectedMessages[Math.floor(Math.random() * respectedMessages.length)]
+          : generalWelcomeMessages[Math.floor(Math.random() * generalWelcomeMessages.length)];
+
+        bot.chat(msg);
+      }
+    });
   }
 
   function startHumanLikeBehavior() {
