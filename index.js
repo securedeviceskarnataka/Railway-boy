@@ -68,8 +68,6 @@ function createBot() {
     "Powered by memes and potatoes."
   ];
 
-  const knownPlayers = new Set();
-
   bot.on('spawn', () => {
     bot.chat('/register aagop04');
     setTimeout(() => bot.chat('/login aagop04'), 1000);
@@ -79,16 +77,15 @@ function createBot() {
     scheduleRandomDisconnect();
   });
 
-  // ✅ CHAT-BASED JOIN DETECTION (WORKS IN ALL SERVERS)
+  // ✅ Chat-based join detection — greets EVERY time
   bot.on('message', (jsonMsg) => {
     const message = jsonMsg.toString();
     const joinMatch = message.match(/^(.+?) joined the game$/);
 
     if (joinMatch) {
       const username = joinMatch[1];
-      if (username === bot.username || knownPlayers.has(username)) return;
+      if (username === bot.username) return;
 
-      knownPlayers.add(username);
       const isOperator = operatorUsernames.includes(username);
       const msg = isOperator
         ? respectedMessages[Math.floor(Math.random() * respectedMessages.length)]
