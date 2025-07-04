@@ -9,7 +9,7 @@ app.listen(PORT, () => console.log(`Web server running on port ${PORT}`));
 function createBot() {
   const bot = mineflayer.createBot({
     host: 'sudana_smp.aternos.me',
-    port: 53659,
+    port: 27059,
     username: 'SUDANA_boii',
     version: '1.16.5',
   });
