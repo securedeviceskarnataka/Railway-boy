@@ -1,40 +1,134 @@
-const mineflayer = require('mineflayer'); const { pathfinder, Movements, goals } = require('mineflayer-pathfinder'); const Vec3 = require('vec3'); const mcData = require('minecraft-data'); const { GoalNear } = goals; const { mineflayer: mineflayerViewer } = require('prismarine-viewer'); const fs = require('fs'); const random = require('lodash.random');
+const mineflayer = require('mineflayer');
+const express = require('express');
 
-const USERNAME = process.env.BOT_USERNAME || 'RailwayBot'; const HOST = process.env.SERVER_HOST || 'sudana_smp.aternos.me'; const PORT = parseInt(process.env.SERVER_PORT || '30926'); const SPAWN_POINT = new Vec3(-247, 200, 62); const OPERATORS = ['A1111318', '.A1111318'];
+const app = express();
+const PORT = process.env.PORT || 3000;
+app.get("/", (req, res) => res.send("Bot is running"));
+app.listen(PORT, () => console.log(`Web server running on port ${PORT}`));
 
-let bot;
+function createBot() {
+  const bot = mineflayer.createBot({
+    host: 'sudana_smp.aternos.me',
+    port: 53659,
+    username: 'SUDANA_boii',
+    version: '1.16.5',
+  });
 
-function createBot() { bot = mineflayer.createBot({ host: HOST, port: PORT, username: USERNAME });
+  const operatorUsernames = ['.A1111318', 'A1111318'];
+  const respectedMessages = [
+    "Bow down mortals, the Operator has arrived!",
+    "A salute to our lord and savior Akshath!",
+    "The server just leveled up. Welcome, Operator!",
+    "A wild King Akshath appeared with god-tier vibes!"
+  ];
 
-bot.loadPlugin(pathfinder);
+  const generalWelcomeMessages = [
+    "Ey yo! Another noob joins the chaos!",
+    "Hide your diamonds, someone's here!",
+    "Did someone order a creeper magnet?",
+    "Server's now 1% cooler. Welcome!",
+    "Hope you brought snacks, it's wild here!",
+    "And they said legends never join. Welp!",
+    "Yo! Another Steve tryna beat the Ender Dragon?",
+    "Quick! Someone give them dirt armor!",
+    "New challenger approaches... probably laggy tho.",
+    "Please welcome the person who might rage quit in 10 mins!",
+    "Brace yourself! New player detected!",
+    "Welcome! Don’t dig straight down... or do, lol.",
+    "Hello there! Don’t worry, we only bite sometimes.",
+    "Nice skin. Just kidding, default gang forever.",
+    "You spawn, you punch tree, you survive. Good luck!",
+    "Welcome! You’re now in the best (worst) server ever!",
+    "Ah, fresh meat! JK... or am I?",
+    "Look busy! Someone just joined!",
+    "The server got 5% more unpredictable. Welcome!",
+    "Remember: The creepers are faster than your WiFi!"
+  ];
 
-bot.once('spawn', () => { bot.chat('Bot is online! 🤖'); bot.pathfinder.setMovements(new Movements(bot, mcData(bot.version))); bot.pathfinder.setGoal(new GoalNear(SPAWN_POINT.x, SPAWN_POINT.y, SPAWN_POINT.z, 1));
+  const funnyMessages = [
+    "Anyone got food? I ate my keyboard.",
+    "I tried hugging a creeper... didn’t end well.",
+    "Day 47: Still pretending to be human.",
+    "Cows give milk, I give lag.",
+    "The floor is lava! Just kidding. Or not?",
+    "Why punch trees when you can punch your luck?",
+    "Mining straight down for science!",
+    "Lag is just my way of saying hi!",
+    "I once won a fight... in creative mode.",
+    "Is water wet or just lazy ice?",
+    "Bees are just angry flying potatoes.",
+    "Who needs diamonds when you have friendship? lol jk gimme diamonds.",
+    "Oops, I crafted 64 buttons again.",
+    "I’d help, but I’m morally AFK.",
+    "Let’s all pretend we know what we’re doing.",
+    "Breaking news: Bot found to be cooler than players.",
+    "Currently running on 3 brain cells and redstone.",
+    "Built a dirt house, feeling rich.",
+    "Don’t worry, I only grief emotionally.",
+    "Powered by memes and potatoes."
+  ];
 
-setInterval(randomIdleChat, random(10 * 60 * 1000, 15 * 60 * 1000));
-setInterval(doRandomMovement, random(10 * 1000, 30 * 1000));
-setInterval(lookAtPlayers, 15000);
-setInterval(tryDigBlock, 30000);
-setInterval(attackNearbyMobs, 30000);
+  bot.on('spawn', () => {
+    bot.chat('/register aagop04');
+    setTimeout(() => bot.chat('/login aagop04'), 1000);
 
-});
+    startHumanLikeBehavior();
+    scheduleRandomMessage();
+    scheduleRandomDisconnect();
+  });
 
-bot.on('playerJoined', (player) => { if (player.username === bot.username) return; if (OPERATORS.includes(player.username)) { bot.chat(🎉 Welcome back, mighty operator ${player.username}!); } else { const messages = [ Hey ${player.username}! Welcome to the chaos! 😂, ${player.username} joined... Let the games begin! 😈, Welcome ${player.username}, may the creepers spare you today. 🧨 ]; bot.chat(messages[random(0, messages.length - 1)]); } });
+  // ✅ Chat-based join detection — greets EVERY time
+  bot.on('message', (jsonMsg) => {
+    const message = jsonMsg.toString();
+    const joinMatch = message.match(/^(.+?) joined the game$/);
 
-bot.on('end', () => { const delay = random(60 * 1000, 120 * 1000); console.log(Bot disconnected. Rejoining in ${delay / 1000} seconds...); setTimeout(createBot, delay); });
+    if (joinMatch) {
+      const username = joinMatch[1];
+      if (username === bot.username) return;
 
-bot.on('error', (err) => console.log('Bot error:', err)); }
+      const isOperator = operatorUsernames.includes(username);
+      const msg = isOperator
+        ? respectedMessages[Math.floor(Math.random() * respectedMessages.length)]
+        : generalWelcomeMessages[Math.floor(Math.random() * generalWelcomeMessages.length)];
 
-function randomIdleChat() { const messages = [ "Why did the chicken cross the Nether? To get to the blaze rods! 🐔", "Anyone seen my diamonds? Oh wait, I'm broke... 💎", "Creeper? Aww man... 💥", "Did someone say mining party? Let's go! ⛏️", "I'm 100% real player. Totally. Absolutely." ]; bot.chat(messages[random(0, messages.length - 1)]); }
+      bot.chat(msg);
+    }
+  });
 
-function doRandomMovement() { const actions = ['forward', 'back', 'left', 'right', 'jump', 'sneak']; const action = actions[random(0, actions.length - 1)];
+  function startHumanLikeBehavior() {
+    setInterval(() => {
+      const actions = ['forward', 'back', 'left', 'right', 'jump', 'sneak'];
+      const action = actions[Math.floor(Math.random() * actions.length)];
+      bot.setControlState(action, true);
+      setTimeout(() => bot.setControlState(action, false), 500 + Math.random() * 1500);
+      bot.look(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2);
+    }, 7000);
+  }
 
-bot.setControlState(action, true); setTimeout(() => bot.setControlState(action, false), random(500, 1500)); }
+  function scheduleRandomMessage() {
+    const delay = Math.floor(Math.random() * (6 - 3 + 1) + 3) * 60 * 1000;
+    setTimeout(() => {
+      const msg = funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
+      bot.chat(msg);
+      scheduleRandomMessage();
+    }, delay);
+  }
 
-function lookAtPlayers() { const players = Object.values(bot.players).filter(p => p.entity); if (players.length === 0) return; const target = players[random(0, players.length - 1)].entity.position; bot.lookAt(target.offset(0, 1.6, 0)); }
+  function scheduleRandomDisconnect() {
+    const minutes = Math.floor(Math.random() * (120 - 60 + 1)) + 60;
+    console.log(`Next disconnect scheduled in ${minutes} minutes.`);
+    setTimeout(() => {
+      console.log("Random disconnecting...");
+      bot.quit();
+    }, minutes * 60 * 1000);
+  }
 
-function tryDigBlock() { const block = bot.blockAt(bot.entity.position.offset(1, -1, 0)); if (block && bot.canDigBlock(block)) { bot.dig(block).catch(() => {}); } }
-
-function attackNearbyMobs() { const mob = bot.nearestEntity(e => e.type === 'mob' && e.mobType !== 'Armor Stand'); if (mob) bot.attack(mob); }
+  bot.on('kicked', console.log);
+  bot.on('error', console.log);
+  bot.on('end', () => {
+    console.log("Bot disconnected. Reconnecting in 50 seconds...");
+    setTimeout(createBot, 50000);
+  });
+}
 
 createBot();
-
