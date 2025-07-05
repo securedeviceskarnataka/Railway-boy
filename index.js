@@ -1,4 +1,4 @@
- const mineflayer = require('mineflayer') const { pathfinder, Movements, goals } = require('mineflayer-pathfinder') const Vec3 = require('vec3') const mcData = require('minecraft-data')
+const mineflayer = require('mineflayer') const { pathfinder, Movements, goals } = require('mineflayer-pathfinder') const Vec3 = require('vec3') const mcData = require('minecraft-data')
 
 const usernames = ['BotMaster', 'BotMaster_', 'BotMasterX', 'BotMaster123'] let usernameIndex = 0 let reconnectTimeout = null
 
