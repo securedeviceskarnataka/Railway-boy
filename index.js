@@ -77,7 +77,6 @@ function createBot() {
     scheduleRandomDisconnect();
   });
 
-  // ✅ Chat-based join detection — greets EVERY time
   bot.on('message', (jsonMsg) => {
     const message = jsonMsg.toString();
     const joinMatch = message.match(/^(.+?) joined the game$/);
@@ -87,11 +86,16 @@ function createBot() {
       if (username === bot.username) return;
 
       const isOperator = operatorUsernames.includes(username);
-      const msg = isOperator
-        ? respectedMessages[Math.floor(Math.random() * respectedMessages.length)]
-        : generalWelcomeMessages[Math.floor(Math.random() * generalWelcomeMessages.length)];
+      const welcomeMessages = isOperator ? respectedMessages : generalWelcomeMessages;
+      const msg = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];
 
-      bot.chat(msg);
+      // Delay welcome message 10–15 minutes
+      const delay = (10 + Math.floor(Math.random() * 6)) * 60 * 1000;
+      console.log(`Delaying welcome message for ${username} by ${delay / 60000} minutes`);
+
+      setTimeout(() => {
+        bot.chat(msg);
+      }, delay);
     }
   });
 
