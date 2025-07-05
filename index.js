@@ -73,10 +73,11 @@ function createBot() {
     setTimeout(() => bot.chat('/login aagop04'), 1000);
 
     startHumanLikeBehavior();
-    scheduleRandomMessage();
+    scheduleFunnyMessage(); // ✅ modified function name
     scheduleRandomDisconnect();
   });
 
+  // Welcome players immediately when they join
   bot.on('message', (jsonMsg) => {
     const message = jsonMsg.toString();
     const joinMatch = message.match(/^(.+?) joined the game$/);
@@ -86,16 +87,11 @@ function createBot() {
       if (username === bot.username) return;
 
       const isOperator = operatorUsernames.includes(username);
-      const welcomeMessages = isOperator ? respectedMessages : generalWelcomeMessages;
-      const msg = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];
+      const msg = isOperator
+        ? respectedMessages[Math.floor(Math.random() * respectedMessages.length)]
+        : generalWelcomeMessages[Math.floor(Math.random() * generalWelcomeMessages.length)];
 
-      // Delay welcome message 10–15 minutes
-      const delay = (10 + Math.floor(Math.random() * 6)) * 60 * 1000;
-      console.log(`Delaying welcome message for ${username} by ${delay / 60000} minutes`);
-
-      setTimeout(() => {
-        bot.chat(msg);
-      }, delay);
+      bot.chat(msg); // ✅ no delay added here (as requested)
     }
   });
 
@@ -109,12 +105,13 @@ function createBot() {
     }, 7000);
   }
 
-  function scheduleRandomMessage() {
-    const delay = Math.floor(Math.random() * (6 - 3 + 1) + 3) * 60 * 1000;
+  function scheduleFunnyMessage() {
+    // ✅ modified: send funny message every 10–15 minutes
+    const delay = Math.floor(Math.random() * (15 - 10 + 1) + 10) * 60 * 1000;
     setTimeout(() => {
       const msg = funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
       bot.chat(msg);
-      scheduleRandomMessage();
+      scheduleFunnyMessage(); // repeat
     }, delay);
   }
 
