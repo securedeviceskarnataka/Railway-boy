@@ -1,25 +1,15 @@
 {
-  "name": "minecraft-bot",
+  "name": "mineflayer-bot",
   "version": "1.0.0",
-  "description": "A human-like Minecraft bot using Mineflayer",
+  "description": "A Minecraft bot with human-like behavior",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "mineflayer": "^4.5.0",
-    "mineflayer-pathfinder": "^2.2.1",
+    "mineflayer": "^4.9.0",
+    "mineflayer-pathfinder": "^2.3.2",
     "vec3": "^0.1.7",
-    "minecraft-data": "^3.22.1"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "keywords": [
-    "minecraft",
-    "bot",
-    "mineflayer"
-  ],
-  "author": "You",
-  "license": "MIT"
+    "minecraft-data": "^3.0.0"
+  }
 }
