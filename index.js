@@ -1,18 +1,6 @@
 const mineflayer = require('mineflayer');
-const express = require('express');
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-app.get("/", (req, res) => res.send("Bot is running"));
-app.listen(PORT, () => console.log(`Web server running on port ${PORT}`));
-
-const ORIGINAL_USERNAME = 'SUDANA_boii';
-let currentUsername = ORIGINAL_USERNAME;
-let botInstance = null;
-let reconnecting = false;
-let wasBaseBanned = false;
-
-const operatorUsernames = ['.A1111318', 'A1111318'];
+const { pathfinder } = require('mineflayer-pathfinder');
+const { Vec3 } = require('vec3');
 
 const respectedMessages = [
   "Warning: Akshath's presence may cause sudden intelligence spikes.",
@@ -97,111 +85,106 @@ const funnyMessages = [
   "Server me join kiya aur laga sab theek hai... phir creeper aaya 😂"
 ];
 
-function createBot() {
-  if (botInstance || reconnecting) return;
-  reconnecting = true;
+// === BOT CONFIG ===
+const serverHost = 'sudana_smp.aternos.me';
+const serverPort = 30926;
+const ORIGINAL_USERNAME = 'exe_akshath';
+let currentUsername = ORIGINAL_USERNAME;
+let reconnecting = false;
+let wasBaseBanned = false;
 
+function createBot(username) {
   const bot = mineflayer.createBot({
-    host: 'sudana_smp.aternos.me',
+    host: sudana_smp.aternos.me,
     port: 53659,
-    username: currentUsername,
-    version: '1.16.5',
+    username: SUDANA_boii,
+    auth: 'offline',
+    version: false
   });
 
-  botInstance = bot;
+  bot.loadPlugin(pathfinder);
 
-  bot.on('spawn', () => {
-    bot.chat('/register aagop04');
-    setTimeout(() => bot.chat('/login aagop04'), 1000);
-
-    startHumanLikeBehavior();
-    scheduleFunnyMessage();
-    scheduleRandomDisconnect();
-
-    if (wasBaseBanned && currentUsername !== ORIGINAL_USERNAME) {
-      currentUsername = ORIGINAL_USERNAME;
-      wasBaseBanned = false;
-    }
-
-    reconnecting = false;
-  });
-
-  bot.on('message', (jsonMsg) => {
-    const message = jsonMsg.toString();
-    const joinMatch = message.match(/^(.+?) joined the game$/);
-    if (joinMatch) {
-      const username = joinMatch[1];
-      if (username === bot.username) return;
-      const msg = operatorUsernames.includes(username)
-        ? respectedMessages[Math.floor(Math.random() * respectedMessages.length)]
-        : generalWelcomeMessages[Math.floor(Math.random() * generalWelcomeMessages.length)];
-      bot.chat(msg);
-    }
-  });
-
-  bot.on('kicked', (reason) => {
-    console.log("Kicked or banned. Reason:", reason);
-    botInstance = null;
-    reconnecting = true;
-
-    if (currentUsername === ORIGINAL_USERNAME) {
-      wasBaseBanned = true;
-      const randomNum = Math.floor(Math.random() * 900 + 100);
-      currentUsername = `${ORIGINAL_USERNAME}${randomNum}`;
-    }
-
-    const delay = Math.floor(Math.random() * 30 + 30) * 1000;
-    console.log(`Reconnecting in ${delay / 1000} sec with username: ${currentUsername}`);
-    setTimeout(() => {
-      reconnecting = false;
-      createBot();
-    }, delay);
+  bot.on('login', () => {
+    console.log(`[Bot] Logged in as ${username}`);
+    wasBaseBanned = false;
   });
 
   bot.on('end', () => {
-    botInstance = null;
     if (!reconnecting) {
-      const delay = Math.floor(Math.random() * 30 + 30) * 1000;
-      console.log(`Disconnected. Reconnecting in ${delay / 1000} sec...`);
-      setTimeout(createBot, delay);
+      reconnecting = true;
+      const delay = 30000 + Math.floor(Math.random() * 60000);
+      console.log(`[Bot] Disconnected. Reconnecting in ${delay / 1000}s...`);
+
+      setTimeout(() => {
+        reconnecting = false;
+        if (wasBaseBanned) {
+          currentUsername = `${ORIGINAL_USERNAME}${Math.floor(Math.random() * 10000)}`;
+        }
+        createBot(currentUsername);
+      }, delay);
     }
   });
 
-  bot.on('error', console.log);
+  bot.on('kicked', reason => {
+    console.log(`[Bot] Kicked: ${reason}`);
+    if (reason.toLowerCase().includes('ban') || reason.toLowerCase().includes('not white-listed')) {
+      wasBaseBanned = true;
+    }
+  });
 
-  function startHumanLikeBehavior() {
-    const actions = ['forward', 'back', 'left', 'right', 'jump', 'sneak'];
+  bot.on('error', err => {
+    console.log(`[Bot] Error: ${err.message}`);
+  });
 
-    function moveRandomly() {
-      const action = actions[Math.floor(Math.random() * actions.length)];
-      bot.setControlState(action, true);
-      setTimeout(() => {
-        bot.setControlState(action, false);
-        const delay = 1000 + Math.random() * 6000;
-        setTimeout(moveRandomly, delay);
-      }, 300 + Math.random() * 1000);
+  // === CUSTOM WELCOME MESSAGES ===
+  bot.on('playerJoined', (player) => {
+    if (player.username === bot.username) return;
+
+    let message;
+    if (player.username.toLowerCase() === 'a1111318' || player.username.toLowerCase() === '.a1111318') {
+      message = respectedMessages[Math.floor(Math.random() * respectedMessages.length)];
+    } else {
+      message = generalWelcomeMessages[Math.floor(Math.random() * generalWelcomeMessages.length)];
     }
 
-    moveRandomly();
-  }
-
-  function scheduleFunnyMessage() {
-    const delay = Math.floor(Math.random() * (15 - 10 + 1) + 10) * 60 * 1000;
     setTimeout(() => {
-      const msg = funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
-      bot.chat(msg);
-      scheduleFunnyMessage();
-    }, delay);
-  }
+      bot.chat(message);
+    }, 3000 + Math.random() * 3000);
+  });
 
-  function scheduleRandomDisconnect() {
-    const minutes = Math.floor(Math.random() * (120 - 60 + 1)) + 60;
-    console.log(`Next disconnect in ${minutes} minutes.`);
-    setTimeout(() => {
-      console.log("Disconnecting for stealth...");
-      bot.quit();
-    }, minutes * 60 * 1000);
+  // === FUNNY RANDOM MESSAGES ===
+  setInterval(() => {
+    const msg = funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
+    bot.chat(msg);
+  }, 30000 + Math.random() * 30000);
+
+  // === RANDOM HUMAN-LIKE ACTIONS ===
+  const actions = ['jump', 'sneak', 'move_left', 'move_right', 'look_random'];
+  function doRandomAction() {
+    const action = actions[Math.floor(Math.random() * actions.length)];
+    switch (action) {
+      case 'jump':
+        bot.setControlState('jump', true);
+        setTimeout(() => bot.setControlState('jump', false), 500 + Math.random() * 500);
+        break;
+      case 'sneak':
+        bot.setControlState('sneak', true);
+        setTimeout(() => bot.setControlState('sneak', false), 1000 + Math.random() * 1000);
+        break;
+      case 'move_left':
+        bot.setControlState('left', true);
+        setTimeout(() => bot.setControlState('left', false), 800 + Math.random() * 1200);
+        break;
+      case 'move_right':
+        bot.setControlState('right', true);
+        setTimeout(() => bot.setControlState('right', false), 800 + Math.random() * 1200);
+        break;
+      case 'look_random':
+        bot.look(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, true);
+        break;
+    }
   }
+  setInterval(doRandomAction, 7000 + Math.random() * 8000);
 }
 
-createBot();
+createBot(currentUsername);
