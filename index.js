@@ -117,6 +117,7 @@ function createBot() {
   bot.on('spawn', () => {
     bot.chat('/register aagop04');
     setTimeout(() => bot.chat('/login aagop04'), 1000);
+    setTimeout(() => bot.chat('/tp -247 200 62'), 2000); // ⬅️ TELEPORT COMMAND
     startHumanLikeBehavior();
     scheduleFunnyMessage();
     scheduleRandomDisconnect();
@@ -175,7 +176,7 @@ function createBot() {
     if (!reconnecting) {
       reconnecting = true;
       botInstance = null;
-      const randomSuffix = Math.floor(Math.random() * 900 + 100); // 3-digit number
+      const randomSuffix = Math.floor(Math.random() * 900 + 100);
       baseUsername = `SUDANA_boii${randomSuffix}`;
       const delay = Math.floor(Math.random() * 60 + 30) * 1000;
       console.log(`Reconnecting in ${delay / 1000} seconds with new username: ${baseUsername}`);
