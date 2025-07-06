@@ -7,14 +7,22 @@ app.get("/", (req, res) => res.send("Bot is running"));
 app.listen(PORT, () => console.log(`Web server running on port ${PORT}`));
 
 let baseUsername = 'SUDANA_boii';
+let botInstance = null; // Track the current bot
+let reconnecting = false; // To prevent multiple reconnects
 
 function createBot() {
+  if (botInstance || reconnecting) return;
+
+  reconnecting = false;
+
   const bot = mineflayer.createBot({
     host: 'sudana_smp.aternos.me',
     port: 53659,
     username: baseUsername,
     version: '1.16.5',
   });
+
+  botInstance = bot;
 
   const operatorUsernames = ['.A1111318', 'A1111318'];
   const respectedMessages = [
@@ -164,20 +172,30 @@ function createBot() {
 
   bot.on('kicked', reason => {
     console.log("Kicked or banned. Reason:", reason);
-    const randomSuffix = Math.floor(Math.random() * 900 + 100); // 3-digit number
-    baseUsername = `SUDANA_boii${randomSuffix}`;
-    const delay = Math.floor(Math.random() * 60 + 30) * 1000;
-    console.log(`Reconnecting in ${delay / 1000} seconds with new username: ${baseUsername}`);
-    setTimeout(createBot, delay);
+    if (!reconnecting) {
+      reconnecting = true;
+      botInstance = null;
+      const randomSuffix = Math.floor(Math.random() * 900 + 100); // 3-digit number
+      baseUsername = `SUDANA_boii${randomSuffix}`;
+      const delay = Math.floor(Math.random() * 60 + 30) * 1000;
+      console.log(`Reconnecting in ${delay / 1000} seconds with new username: ${baseUsername}`);
+      setTimeout(() => {
+        reconnecting = false;
+        createBot();
+      }, delay);
+    }
+  });
+
+  bot.on('end', () => {
+    botInstance = null;
+    if (!reconnecting) {
+      const delay = Math.floor(Math.random() * 60 + 30) * 1000;
+      console.log(`Bot disconnected. Reconnecting in ${delay / 1000} seconds...`);
+      setTimeout(createBot, delay);
+    }
   });
 
   bot.on('error', console.log);
-
-  bot.on('end', () => {
-    const delay = Math.floor(Math.random() * 60 + 30) * 1000;
-    console.log(`Bot disconnected. Reconnecting in ${delay / 1000} seconds...`);
-    setTimeout(createBot, delay);
-  });
 }
 
 createBot();
