@@ -6,19 +6,20 @@ const PORT = process.env.PORT || 3000;
 app.get("/", (req, res) => res.send("Bot is running"));
 app.listen(PORT, () => console.log(`Web server running on port ${PORT}`));
 
-let baseUsername = 'SUDANA_boii';
-let botInstance = null; // Track the current bot
-let reconnecting = false; // To prevent multiple reconnects
+const ORIGINAL_USERNAME = 'SUDANA_boii';
+let currentUsername = ORIGINAL_USERNAME;
+let botInstance = null;
+let reconnecting = false;
+let wasBaseBanned = false; // Flag to detect if base username was banned
 
 function createBot() {
   if (botInstance || reconnecting) return;
-
   reconnecting = false;
 
   const bot = mineflayer.createBot({
     host: 'sudana_smp.aternos.me',
     port: 53659,
-    username: baseUsername,
+    username: currentUsername,
     version: '1.16.5',
   });
 
@@ -48,32 +49,26 @@ function createBot() {
   ];
 
   const generalWelcomeMessages = [
-    "Ey yo! Another noob joins the chaos!",
-    "Look who's back to bless us with zero skills, welcome.",
-    "Bro’s armor shines brighter than his IQ, welcome.",
-    "Yen magane! Skill illa andre kuda confidence full ide, welcome.",
-    "Ninna gameplay nodid mele creeper suicide madta ide, welcome.",
-    "Maga, respawn point ge thumba busy aaguttide ninna inda, welcome.",
-    "Server ge illa bejaru ide — neenu join madidya andre, welcome.",
-    "Neenu barbekandre net error aagutte, welcome.",
-    "Enappa! Sword idde, adre attack madodilla — style ge idiya? Welcome.",
-    "Villagers kuda heelta idare — ‘Neenu trade beda guru’, welcome.",
-    "Neenu bandmele server ge UPS beku antha feel agutte, welcome.",
-    "Bro, team ge support bekadre neenu AFK irutte, welcome.",
-    "XP kuda ninna kaale bidtade, welcome.",
-    "His PvP is like WiFi at grandma’s house — weak, welcome.",
-    "Redstone circuits fear him… not because he’s smart, welcome.",
-    "Aree bhai! Kya hero ban ke aaya? Server toh villain ban gaya, welcome.",
-    "Iski gameplay dekh ke creeper bhi explode nahi karta, welcome.",
-    "Net slow tha ya tu hi lag ka baap hai? Welcome.",
-    "Server me aate hi drama start, serial chalu ho gaya bhai, welcome.",
-    "Potion pi ke bhi kuch nahi hota isko… placebo effect hai bas, welcome.",
-    "Ye banda toh diamond se zyada respawn karta hai, welcome.",
-    "Even skeletons have better aim than this noob, welcome.",
-    "Ye banda loot lene aata hai, dene nahi, welcome.",
-    "Bhai server nahi, circus bana diya tune, welcome.",
-    "Jab bhi tu aata hai… Herobrine bhi afk chala jaata hai, welcome.",
-    "Remember: The creepers are faster than your WiFi!"
+    "Yo! Welcome to the server, champ 🎮",
+    "Look who just joined the fun! Welcome aboard 😎",
+    "Hey hey! The squad just got cooler. Welcome!",
+    "Welcome! May your pickaxe be strong and your adventures epic 🗺️",
+    "The vibes just got better — glad you’re here!",
+    "Server’s shining brighter now. Welcome in ✨",
+    "Another legend has entered the realm. Let’s gooo!",
+    "Eyyo! Ready for some blocky adventures? Welcome!",
+    "Woot woot! Welcome to the block party 🎉",
+    "New player alert! Time to make some awesome memories!",
+    "Glad you made it! Let’s build something amazing together 🧱",
+    "Adventure awaits! Welcome to your Minecraft journey 🚀",
+    "Our team just leveled up — welcome!",
+    "Welcome! May your creepers be few and your diamonds plenty 💎",
+    "Ahoy! Time to sail through some fun. Welcome matey ⛵",
+    "Knock knock. Who's there? Only the coolest player in town — welcome!",
+    "The game's better with you in it. Welcome aboard!",
+    "Welcome! Hope you brought your mining spirit and good vibes 😊",
+    "It’s not just a server anymore — it’s YOUR server now!",
+    "Peace, blocks, and good times! Welcome to the crew."
   ];
 
   const funnyMessages = [
@@ -117,10 +112,16 @@ function createBot() {
   bot.on('spawn', () => {
     bot.chat('/register aagop04');
     setTimeout(() => bot.chat('/login aagop04'), 1000);
-    setTimeout(() => bot.chat('/tp -247 200 62'), 2000); // ⬅️ TELEPORT COMMAND
     startHumanLikeBehavior();
     scheduleFunnyMessage();
     scheduleRandomDisconnect();
+
+    // Try reverting to original name on next connect if previously banned
+    if (wasBaseBanned && currentUsername !== ORIGINAL_USERNAME) {
+      console.log("Base username might be unbanned now. Attempting to switch back...");
+      currentUsername = ORIGINAL_USERNAME;
+      wasBaseBanned = false;
+    }
   });
 
   bot.on('message', (jsonMsg) => {
@@ -176,10 +177,13 @@ function createBot() {
     if (!reconnecting) {
       reconnecting = true;
       botInstance = null;
-      const randomSuffix = Math.floor(Math.random() * 900 + 100);
-      baseUsername = `SUDANA_boii${randomSuffix}`;
+      wasBaseBanned = (currentUsername === ORIGINAL_USERNAME); // Remember if original got banned
+      if (wasBaseBanned) {
+        const randomSuffix = Math.floor(Math.random() * 900 + 100);
+        currentUsername = `${ORIGINAL_USERNAME}${randomSuffix}`;
+      }
       const delay = Math.floor(Math.random() * 60 + 30) * 1000;
-      console.log(`Reconnecting in ${delay / 1000} seconds with new username: ${baseUsername}`);
+      console.log(`Reconnecting in ${delay / 1000} seconds with username: ${currentUsername}`);
       setTimeout(() => {
         reconnecting = false;
         createBot();
