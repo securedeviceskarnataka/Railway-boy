@@ -6,11 +6,13 @@ const PORT = process.env.PORT || 3000;
 app.get("/", (req, res) => res.send("Bot is running"));
 app.listen(PORT, () => console.log(`Web server running on port ${PORT}`));
 
+let baseUsername = 'SUDANA_boii';
+
 function createBot() {
   const bot = mineflayer.createBot({
     host: 'sudana_smp.aternos.me',
     port: 53659,
-    username: 'SUDANA_boii',
+    username: baseUsername,
     version: '1.16.5',
   });
 
@@ -107,47 +109,47 @@ function createBot() {
   bot.on('spawn', () => {
     bot.chat('/register aagop04');
     setTimeout(() => bot.chat('/login aagop04'), 1000);
-
     startHumanLikeBehavior();
-    scheduleFunnyMessage(); // ✅ modified function name
+    scheduleFunnyMessage();
     scheduleRandomDisconnect();
   });
 
-  // Welcome players immediately when they join
   bot.on('message', (jsonMsg) => {
     const message = jsonMsg.toString();
     const joinMatch = message.match(/^(.+?) joined the game$/);
-
     if (joinMatch) {
       const username = joinMatch[1];
       if (username === bot.username) return;
-
       const isOperator = operatorUsernames.includes(username);
       const msg = isOperator
         ? respectedMessages[Math.floor(Math.random() * respectedMessages.length)]
         : generalWelcomeMessages[Math.floor(Math.random() * generalWelcomeMessages.length)];
-
-      bot.chat(msg); // ✅ no delay added here (as requested)
+      bot.chat(msg);
     }
   });
 
   function startHumanLikeBehavior() {
-    setInterval(() => {
-      const actions = ['forward', 'back', 'left', 'right', 'jump', 'sneak'];
+    const actions = ['forward', 'back', 'left', 'right', 'jump', 'sneak'];
+
+    function moveRandomly() {
       const action = actions[Math.floor(Math.random() * actions.length)];
       bot.setControlState(action, true);
-      setTimeout(() => bot.setControlState(action, false), 500 + Math.random() * 1500);
-      bot.look(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2);
-    }, 7000);
+      setTimeout(() => {
+        bot.setControlState(action, false);
+        const delay = 1000 + Math.random() * 6000;
+        setTimeout(moveRandomly, delay);
+      }, 300 + Math.random() * 1000);
+    }
+
+    moveRandomly();
   }
 
   function scheduleFunnyMessage() {
-    // ✅ modified: send funny message every 10–15 minutes
     const delay = Math.floor(Math.random() * (15 - 10 + 1) + 10) * 60 * 1000;
     setTimeout(() => {
       const msg = funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
       bot.chat(msg);
-      scheduleFunnyMessage(); // repeat
+      scheduleFunnyMessage();
     }, delay);
   }
 
@@ -160,11 +162,21 @@ function createBot() {
     }, minutes * 60 * 1000);
   }
 
-  bot.on('kicked', console.log);
+  bot.on('kicked', reason => {
+    console.log("Kicked or banned. Reason:", reason);
+    const randomSuffix = Math.floor(Math.random() * 900 + 100); // 3-digit number
+    baseUsername = `SUDANA_boii${randomSuffix}`;
+    const delay = Math.floor(Math.random() * 60 + 30) * 1000;
+    console.log(`Reconnecting in ${delay / 1000} seconds with new username: ${baseUsername}`);
+    setTimeout(createBot, delay);
+  });
+
   bot.on('error', console.log);
+
   bot.on('end', () => {
-    console.log("Bot disconnected. Reconnecting in 50 seconds...");
-    setTimeout(createBot, 50000);
+    const delay = Math.floor(Math.random() * 60 + 30) * 1000;
+    console.log(`Bot disconnected. Reconnecting in ${delay / 1000} seconds...`);
+    setTimeout(createBot, delay);
   });
 }
 
