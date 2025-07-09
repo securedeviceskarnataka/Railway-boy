@@ -1,4 +1,3 @@
-// index.js
 const mineflayer = require('mineflayer');
 const express = require('express');
 
@@ -11,7 +10,6 @@ const BOT_COUNT = 10;
 let currentIndex = 0;
 const bots = Array(BOT_COUNT).fill(null);
 const banned = Array(BOT_COUNT).fill(false);
-let switching = false;
 
 const baseName = 'SUDANA_boii';
 const operatorUsernames = ['.A1111318', 'A1111318'];
@@ -99,43 +97,36 @@ const funnyMessages = [
   "Server me join kiya aur laga sab theek hai... phir creeper aaya 😂"
 ];
 
-// Immediately start the first bot
 createBot(currentIndex);
-scheduleNext();
+scheduleRotation();
 
-function scheduleNext() {
-  if (switching) return;
-  switching = true;
-
+function scheduleRotation() {
   const delayMs = (60 + Math.random() * 60) * 60 * 1000;
-  console.log(`Scheduling next switch in ${(delayMs / 60000).toFixed(2)} minutes.`);
+  console.log(`⏰ Scheduling next switch in ${(delayMs / 60000).toFixed(2)} mins`);
   setTimeout(() => {
-    rotateBots();
-    switching = false;
-    scheduleNext();
+    rotateToNext();
+    scheduleRotation();
   }, delayMs);
 }
 
-function rotateBots() {
-  const oldIndex = currentIndex;
-  const oldBot = bots[oldIndex];
+function rotateToNext() {
+  const oldBot = bots[currentIndex];
   if (oldBot) {
-    console.log(`Logging out bot: ${getBotName(oldIndex)}`);
+    console.log(`🔁 Rotating out bot: ${getBotName(currentIndex)}`);
     oldBot.quit();
-    bots[oldIndex] = null;
+    bots[currentIndex] = null;
   }
-  currentIndex = getNextIndex(oldIndex);
-  console.log(`Starting bot: ${getBotName(currentIndex)}`);
+  currentIndex = getNextAvailableIndex(currentIndex);
+  console.log(`✅ Starting new bot: ${getBotName(currentIndex)}`);
   createBot(currentIndex);
 }
 
-function getNextIndex(start) {
-  let next = (start + 1) % BOT_COUNT;
+function getNextAvailableIndex(start) {
   for (let i = 0; i < BOT_COUNT; i++) {
-    if (!banned[next]) return next;
-    next = (next + 1) % BOT_COUNT;
+    const idx = (start + 1 + i) % BOT_COUNT;
+    if (!banned[idx]) return idx;
   }
-  console.log('⚠️ All bots banned! Resetting bans.');
+  console.log("🚨 All bots are banned. Resetting ban list.");
   banned.fill(false);
   return 0;
 }
@@ -146,79 +137,78 @@ function getBotName(i) {
 
 function createBot(index) {
   const username = getBotName(index);
-  console.log(`Creating bot ${username}`);
+  console.log(`🤖 Creating bot ${username}`);
   const bot = mineflayer.createBot({
     host: 'sudana_smp.aternos.me',
     port: 53659,
     username,
     version: '1.16.5'
   });
+
   bots[index] = bot;
 
   bot.on('spawn', () => {
     bot.chat('/register aagop04');
     setTimeout(() => bot.chat('/login aagop04'), 1000);
-    startHumanLikeBehavior(bot);
-    scheduleFunnyMessage(bot);
+    startHumanActions(bot);
+    startFunnyMessages(bot);
   });
 
   bot.on('message', jsonMsg => {
     const msg = jsonMsg.toString();
-    const m = msg.match(/^(.+?) joined the game$/);
-    if (m) {
-      const user = m[1];
-      if (user !== bot.username) {
-        const reply = operatorUsernames.includes(user)
+    const match = msg.match(/^(.+?) joined the game$/);
+    if (match) {
+      const name = match[1];
+      if (name !== bot.username) {
+        const welcome = operatorUsernames.includes(name)
           ? respectedMessages[Math.floor(Math.random() * respectedMessages.length)]
           : generalWelcomeMessages[Math.floor(Math.random() * generalWelcomeMessages.length)];
-        bot.chat(reply);
+        bot.chat(welcome);
       }
     }
   });
 
-  bot.on('kicked', reason => handleBan(index, reason));
-  bot.on('end', reason => handleBan(index, reason || 'disconnected'));
-  bot.on('error', err => console.log(`Bot ${username} error:`, err));
+  bot.on('kicked', reason => handleKick(index, reason));
+  bot.on('end', reason => handleKick(index, reason));
+  bot.on('error', err => console.log(`⚠️ Bot ${username} error:`, err));
 }
 
-function handleBan(index, reason) {
+function handleKick(index, reason) {
   const username = getBotName(index);
-  console.log(`Bot ${username} kicked/ended: ${reason}`);
-  if (/ban/i.test(String(reason))) {
+  console.log(`❌ Bot ${username} disconnected: ${reason}`);
+  if (String(reason).toLowerCase().includes('ban')) {
     banned[index] = true;
-    console.log(`✅ Marked ${username} as banned.`);
+    console.log(`⛔ Marked ${username} as banned.`);
   }
   bots[index]?.quit();
   bots[index] = null;
 
-  if (!switching) {
-    switching = true;
-    const next = getNextIndex(index);
+  const next = getNextAvailableIndex(index);
+  if (next !== index) {
     currentIndex = next;
-    console.log(`Immediate switch to ${getBotName(next)}`);
+    console.log(`➡️ Switching to bot: ${getBotName(next)}`);
     createBot(next);
-    switching = false;
   }
 }
 
-function startHumanLikeBehavior(bot) {
+function startHumanActions(bot) {
   const actions = ['forward', 'back', 'left', 'right', 'jump', 'sneak'];
-  function move() {
+  function randomMove() {
     const act = actions[Math.floor(Math.random() * actions.length)];
     bot.setControlState(act, true);
     setTimeout(() => {
       bot.setControlState(act, false);
-      setTimeout(move, 1000 + Math.random() * 6000);
+      setTimeout(randomMove, 1000 + Math.random() * 6000);
     }, 300 + Math.random() * 1000);
   }
-  move();
+  randomMove();
 }
 
-function scheduleFunnyMessage(bot) {
+function startFunnyMessages(bot) {
   function sendMsg() {
     const msg = funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
     bot.chat(msg);
     setTimeout(sendMsg, (10 + Math.random() * 5) * 60 * 1000);
   }
   sendMsg();
-      }
+}
