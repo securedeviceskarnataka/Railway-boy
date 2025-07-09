@@ -4,7 +4,7 @@ const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.get("/", (req, res) => res.send("Bot fleet running"));
-app.listen(PORT, () => console.log(`Web server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🌐 Web server running on port ${PORT}`));
 
 const BOT_COUNT = 10;
 let currentIndex = 0;
@@ -198,17 +198,20 @@ function startHumanActions(bot) {
     bot.setControlState(act, true);
     setTimeout(() => {
       bot.setControlState(act, false);
-      setTimeout(randomMove, 1000 + Math.random() * 6000);
-    }, 300 + Math.random() * 1000);
+      if (bot.entity) {
+        bot.look(bot.entity.yaw + (Math.random() - 0.5), bot.entity.pitch + (Math.random() - 0.5), true);
+      }
+      setTimeout(randomMove, 3000 + Math.random() * 5000);
+    }, 500 + Math.random() * 1500);
   }
   randomMove();
 }
 
 function startFunnyMessages(bot) {
-  function sendMsg() {
+  function sendFunny() {
     const msg = funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
     bot.chat(msg);
-    setTimeout(sendMsg, (10 + Math.random() * 5) * 60 * 1000);
+    setTimeout(sendFunny, 30000 + Math.random() * 90000); // every 30s–2min
   }
-  sendMsg();
+  setTimeout(sendFunny, 20000 + Math.random() * 30000);
 }
