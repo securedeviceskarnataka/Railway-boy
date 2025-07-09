@@ -1,3 +1,4 @@
+// index.js
 const mineflayer = require('mineflayer');
 const express = require('express');
 
@@ -7,13 +8,14 @@ app.get("/", (req, res) => res.send("Bot fleet running"));
 app.listen(PORT, () => console.log(`Web server running on port ${PORT}`));
 
 const BOT_COUNT = 10;
-let currentIndex = 0; // index in pool currently playing
-const bots = [];      // will hold bot objects or null
-const banned = new Array(BOT_COUNT).fill(false);
+let currentIndex = 0;
+const bots = Array(BOT_COUNT).fill(null);
+const banned = Array(BOT_COUNT).fill(false);
 let switching = false;
 
 const baseName = 'SUDANA_boii';
 const operatorUsernames = ['.A1111318', 'A1111318'];
+
 const respectedMessages = [
   "Warning: Akshath's presence may cause sudden intelligence spikes.",
   "The server's coolness level just hit max — thanks to Akshath.",
@@ -75,7 +77,7 @@ const funnyMessages = [
   "Lag aaya, creeper gaya… main bhi gaya!",
   "Jab creeper nazar milaaye… tabhi game over samjho!",
   "Nether portal khula… par back ticket book nahi kiya tha!",
-  "Redstone ka engineer banna tha… ab bell bhi nahi bajti!",
+  "Redstone ka engineer banna tha… par bell bhi nahi bajti!",
   "Diamond dhoondhne gaya tha… coal ne hi gali de di!",
   "Aaj tak sirf ek fight jeeta… wo bhi AFK player se!",
   "Server me join kiya tha style se… exit hua sadness se!",
@@ -97,47 +99,59 @@ const funnyMessages = [
   "Server me join kiya aur laga sab theek hai... phir creeper aaya 😂"
 ];
 
+// Immediately start the first bot
+createBot(currentIndex);
+scheduleNext();
+
 function scheduleNext() {
   if (switching) return;
   switching = true;
 
-  const delayMs = (60 + Math.random()*60) * 60 * 1000;
-  console.log(`Scheduling next switch in ${(delayMs/60000).toFixed(2)} minutes.`);
+  const delayMs = (60 + Math.random() * 60) * 60 * 1000;
+  console.log(`Scheduling next switch in ${(delayMs / 60000).toFixed(2)} minutes.`);
   setTimeout(() => {
-    const oldIndex = currentIndex;
-    // clean up current bot
-    const oldBot = bots[oldIndex];
-    if (oldBot) {
-      console.log(`Logging out bot: ${getBotName(oldIndex)}`);
-      oldBot.quit();
-      bots[oldIndex] = null;
-    }
-    // find next non‑banned bot
-    let next = (oldIndex + 1) % BOT_COUNT;
-    for (let i = 0; i < BOT_COUNT; i++) {
-      if (!banned[next]) break;
-      next = (next + 1) % BOT_COUNT;
-    }
-    currentIndex = next;
-    console.log(`Starting bot: ${getBotName(currentIndex)}`);
-    createBot(currentIndex);
-
+    rotateBots();
     switching = false;
-    scheduleNext(); // schedule future swap
+    scheduleNext();
   }, delayMs);
 }
 
+function rotateBots() {
+  const oldIndex = currentIndex;
+  const oldBot = bots[oldIndex];
+  if (oldBot) {
+    console.log(`Logging out bot: ${getBotName(oldIndex)}`);
+    oldBot.quit();
+    bots[oldIndex] = null;
+  }
+  currentIndex = getNextIndex(oldIndex);
+  console.log(`Starting bot: ${getBotName(currentIndex)}`);
+  createBot(currentIndex);
+}
+
+function getNextIndex(start) {
+  let next = (start + 1) % BOT_COUNT;
+  for (let i = 0; i < BOT_COUNT; i++) {
+    if (!banned[next]) return next;
+    next = (next + 1) % BOT_COUNT;
+  }
+  console.log('⚠️ All bots banned! Resetting bans.');
+  banned.fill(false);
+  return 0;
+}
+
 function getBotName(i) {
-  return i === 0 ? baseName : baseName + (i+1);
+  return i === 0 ? baseName : baseName + (i + 1);
 }
 
 function createBot(index) {
   const username = getBotName(index);
+  console.log(`Creating bot ${username}`);
   const bot = mineflayer.createBot({
     host: 'sudana_smp.aternos.me',
     port: 53659,
-    username: username,
-    version: '1.16.5',
+    username,
+    version: '1.16.5'
   });
   bots[index] = bot;
 
@@ -150,70 +164,61 @@ function createBot(index) {
 
   bot.on('message', jsonMsg => {
     const msg = jsonMsg.toString();
-    const joinMatch = msg.match(/^(.+?) joined the game$/);
-    if (joinMatch) {
-      const user = joinMatch[1];
-      if (user === bot.username) return;
-      const isOp = operatorUsernames.includes(user);
-      const reply = isOp
-        ? respectedMessages[Math.floor(Math.random() * respectedMessages.length)]
-        : generalWelcomeMessages[Math.floor(Math.random() * generalWelcomeMessages.length)];
-      bot.chat(reply);
+    const m = msg.match(/^(.+?) joined the game$/);
+    if (m) {
+      const user = m[1];
+      if (user !== bot.username) {
+        const reply = operatorUsernames.includes(user)
+          ? respectedMessages[Math.floor(Math.random() * respectedMessages.length)]
+          : generalWelcomeMessages[Math.floor(Math.random() * generalWelcomeMessages.length)];
+        bot.chat(reply);
+      }
     }
   });
 
-  bot.on('kicked', reason => handleBanOrBan(index, reason));
-  bot.on('end', () => handleBanOrBan(index, 'disconnected'));
+  bot.on('kicked', reason => handleBan(index, reason));
+  bot.on('end', reason => handleBan(index, reason || 'disconnected'));
   bot.on('error', err => console.log(`Bot ${username} error:`, err));
 }
 
-function handleBanOrBan(index, reason) {
+function handleBan(index, reason) {
   const username = getBotName(index);
-  console.log(`Bot ${username} got kicked/banned/disconnected: ${reason}`);
-  // mark banned only if actual ban
+  console.log(`Bot ${username} kicked/ended: ${reason}`);
   if (/ban/i.test(String(reason))) {
     banned[index] = true;
-    console.log(`Marking ${username} as banned`);
+    console.log(`✅ Marked ${username} as banned.`);
   }
+  bots[index]?.quit();
   bots[index] = null;
-  // immediately attempt to bring in next available bot
+
   if (!switching) {
     switching = true;
-    let next = (index + 1) % BOT_COUNT;
-    for (let i = 0; i < BOT_COUNT; i++) {
-      if (!banned[next]) break;
-      next = (next + 1) % BOT_COUNT;
-    }
+    const next = getNextIndex(index);
     currentIndex = next;
-    console.log(`Switching immediately to ${getBotName(currentIndex)}`);
-    createBot(currentIndex);
+    console.log(`Immediate switch to ${getBotName(next)}`);
+    createBot(next);
     switching = false;
   }
 }
 
 function startHumanLikeBehavior(bot) {
-  const actions = ['forward','back','left','right','jump','sneak'];
+  const actions = ['forward', 'back', 'left', 'right', 'jump', 'sneak'];
   function move() {
-    const act = actions[Math.floor(Math.random()*actions.length)];
+    const act = actions[Math.floor(Math.random() * actions.length)];
     bot.setControlState(act, true);
-    const dur = 300 + Math.random()*1000;
     setTimeout(() => {
       bot.setControlState(act, false);
-      setTimeout(move, 1000 + Math.random()*6000);
-    }, dur);
+      setTimeout(move, 1000 + Math.random() * 6000);
+    }, 300 + Math.random() * 1000);
   }
   move();
 }
 
 function scheduleFunnyMessage(bot) {
-  const delay = (10 + Math.random()*5)*60*1000;
-  setTimeout(() => {
-    const msg = funnyMessages[Math.floor(Math.random()*funnyMessages.length)];
+  function sendMsg() {
+    const msg = funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
     bot.chat(msg);
-    scheduleFunnyMessage(bot);
-  }, delay);
-}
-
-// start the first bot and the cycle
-createBot(currentIndex);
-scheduleNext();
+    setTimeout(sendMsg, (10 + Math.random() * 5) * 60 * 1000);
+  }
+  sendMsg();
+      }
