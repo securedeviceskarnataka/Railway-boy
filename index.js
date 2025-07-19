@@ -172,7 +172,7 @@ function createBot() {
       botInstance = null;
       const randomSuffix = Math.floor(Math.random() * 900 + 100);
       baseUsername = `SUDANA_boii${randomSuffix}`;
-      const delay = Math.floor(Math.random() * 11 + 10) * 1000;
+      const delay = Math.floor(Math.random() * 11 + 5) * 1000;
       console.log(`Reconnecting in ${delay / 1000} seconds with new username: ${baseUsername}`);
       setTimeout(() => {
         reconnecting = false;
@@ -184,7 +184,7 @@ function createBot() {
   bot.on('end', () => {
     botInstance = null;
     if (!reconnecting) {
-      const delay = Math.floor(Math.random() * 21 + 10) * 1000;
+      const delay = Math.floor(Math.random() * 11 + 10) * 1000;
       console.log(`Bot disconnected. Reconnecting in ${delay / 1000} seconds...`);
       setTimeout(createBot, delay);
     }
